@@ -1,0 +1,12 @@
+# macOS / Xcode
+.DS_Store
+*.xcodeproj
+xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Build artifacts produced by the Makefile
+dist/
