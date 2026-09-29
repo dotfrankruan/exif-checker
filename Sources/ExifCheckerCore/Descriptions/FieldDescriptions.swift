@@ -58,7 +58,7 @@ public enum FieldDescriptions {
         "XResolution": "水平分辨率。",
         "YResolution": "垂直分辨率。",
         "ResolutionUnit": "分辨率单位（英寸或厘米）。",
-        "Artist": "作者/拍摄者。",
+        "Artist": "艺术家/作者（拍摄者）。",
         "Copyright": "版权信息。",
         "HostComputer": "生成文件的计算机/设备。",
         "ImageDescription": "图像的文字描述。",
@@ -174,7 +174,8 @@ public enum FieldDescriptions {
         "Type": "内容类型。",
         "Format": "内容格式。",
         "Language": "语言。",
-        "Location": "拍摄位置（ISO 6709 格式）。",
+        "Location": "拍摄位置。",
+        "Location.ISO6709": "拍摄位置，ISO 6709 标准格式（纬度/经度/海拔）。",
         "CreationDate": "内容创建时间（通常为 UTC）。",
         "ModificationDate": "内容修改时间。",
         "ContentIdentifier": "内容唯一标识符（用于实况照片配对等）。",
@@ -210,7 +211,6 @@ public enum FieldDescriptions {
         // ---------------------------------------------------------------
         // ID3 / iTunes (audio)
         // ---------------------------------------------------------------
-        "Artist": "艺术家/演唱者。",
         "Album": "专辑名称。",
         "AlbumArtist": "专辑艺术家（合辑时区别于单曲艺术家）。",
         "Genre": "音乐流派。",
