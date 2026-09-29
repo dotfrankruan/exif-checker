@@ -132,8 +132,12 @@ public struct MetadataDocument: Sendable {
         lines.append("File: \(fileURL.path)")
         for group in groups where !group.items.isEmpty {
             let tagWidth = group.items.map(\.key.count).max() ?? 0
+            // padding(toLength:) truncates strings longer than the target,
+            // so clamp the width (long track group names must survive).
+            let groupLabel = "[\(group.name)]"
+            let groupWidth = max(22, groupLabel.count)
             for item in group.items {
-                let paddedGroup = "[\(group.name)]".padding(toLength: 22, withPad: " ", startingAt: 0)
+                let paddedGroup = groupLabel.padding(toLength: groupWidth, withPad: " ", startingAt: 0)
                 let paddedKey = item.key.padding(toLength: tagWidth, withPad: " ", startingAt: 0)
                 lines.append("\(paddedGroup) \(paddedKey) : \(item.value)")
             }
