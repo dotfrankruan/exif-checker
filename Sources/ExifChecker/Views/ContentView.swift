@@ -7,6 +7,10 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var model: AppViewModel
 
+    /// SwiftUI open-window action; captured so the app delegate can recreate
+    /// the main window after it has been closed.
+    @Environment(\.openWindow) private var openWindow
+
     var body: some View {
         Group {
             if let document = model.document {
@@ -24,6 +28,13 @@ struct ContentView: View {
         // Files opened via Finder / Dock / `open -a`.
         .onOpenURL { url in
             model.load(url)
+        }
+        // Capture the openWindow action once so the app delegate can reopen
+        // the main window after the user closed it (Dock click / re-launch).
+        .onAppear {
+            MainWindowController.openWindowAction = {
+                openWindow(id: MainWindowController.windowID)
+            }
         }
         // Toolbar filter field (only useful with a document, but keeping it
         // always mounted avoids toolbar churn when switching files).

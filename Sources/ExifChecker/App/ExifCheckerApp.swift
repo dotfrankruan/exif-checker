@@ -4,6 +4,9 @@ import SwiftUI
 /// the scene, the activation policy, and the menu bar commands.
 struct ExifCheckerApp: App {
 
+    /// Bridges app-delegate events (Dock-icon reopen) into the SwiftUI app.
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     /// Shared view model so menu commands and views act on the same state.
     @StateObject private var model = AppViewModel()
 
@@ -17,7 +20,7 @@ struct ExifCheckerApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("ExifChecker") {
+        WindowGroup("ExifChecker", id: MainWindowController.windowID) {
             ContentView(model: model)
         }
         .defaultSize(width: 980, height: 680)
