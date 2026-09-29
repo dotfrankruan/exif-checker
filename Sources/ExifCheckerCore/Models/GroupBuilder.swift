@@ -40,16 +40,23 @@ public struct GroupBuilder {
         group.items.append(item)
     }
 
-    /// Adds every entry of a raw dictionary, sorted by key for a stable,
-    /// deterministic display order (container dictionaries are unordered).
+    /// Adds every entry of a raw dictionary in natural key order
+    /// (numeric runs compare numerically, so Maker Notes keys 1, 2, 10, 20
+    /// stay in a sensible order).
     public mutating func addAll(_ dictionary: [String: Any]) {
-        for key in dictionary.keys.sorted() {
+        for key in dictionary.keys.sorted(by: GroupBuilder.naturalSort) {
             add(key, dictionary[key])
         }
     }
 
-    /// Sorts the accumulated items alphabetically by raw key.
+    /// Sorts the accumulated items by raw key in natural order.
     public mutating func sortItems() {
-        group.items.sort { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+        group.items.sort(by: { GroupBuilder.naturalSort($0.key, $1.key) })
+    }
+
+    /// Finder-style natural comparison ("2" < "10"). Static so sorting
+    /// `group.items` does not overlap accesses to `self`.
+    private static func naturalSort(_ a: String, _ b: String) -> Bool {
+        a.localizedStandardCompare(b) == .orderedAscending
     }
 }

@@ -34,7 +34,8 @@ public enum ValueFormatter {
             if let v = number(value) { return apertureString(fNumber: pow(2.0, v / 2.0)) }
         case "FNumber":
             if let v = number(value) { return apertureString(fNumber: v) }
-        case "FocalLength", "FocalLengthIn35mmFilmFormat":
+        case "FocalLength", "FocalLengthIn35mmFilmFormat", "FocalLenIn35mmFilm":
+            // Note: ImageIO shortens the EXIF key to "FocalLenIn35mmFilm".
             if let v = number(value) { return "\(trimmed(v)) mm" }
         case "ISOSpeedRatings", "ISOSpeed":
             if let array = value as? [Any] {
@@ -47,6 +48,30 @@ public enum ValueFormatter {
             if let v = number(value) {
                 if v == 0 { return "0 EV" }
                 return String(format: "%+.1f EV", v)
+            }
+
+        // MARK: GPS coordinates (need sibling refs)
+        case "GPSLatitude", "GPSLongitude":
+            if let v = number(value) {
+                let refKey = (key == "GPSLatitude") ? "GPSLatitudeRef" : "GPSLongitudeRef"
+                return dmsString(decimalDegrees: v, ref: siblings[refKey] as? String)
+            }
+
+        // MARK: Version blobs
+        case "ExifVersion", "FlashpixVersion":
+            // ImageIO delivers these as an array of numbers, e.g. [2, 3, 2].
+            if let digits = value as? [Any] {
+                return digits.map { describe($0) }.joined(separator: ".")
+            }
+        // MARK: Lens range
+        case "LensSpecification":
+            // [minFocal, maxFocal, minFNumber, maxFNumber]; round to 3
+            // significant digits to match exiftool's presentation.
+            if let values = (value as? [Any])?.compactMap(number), values.count == 4 {
+                let g3 = { String(format: "%.3g", $0) }
+                let focal = "\(g3(values[0]))-\(g3(values[1])) mm"
+                let aperture = "ƒ/\(g3(values[2]))-\(g3(values[3]))"
+                return "\(focal), \(aperture)"
             }
 
         // MARK: Bitmask / enum fields

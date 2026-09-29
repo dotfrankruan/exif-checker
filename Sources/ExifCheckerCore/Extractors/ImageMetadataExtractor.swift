@@ -57,9 +57,24 @@ public enum ImageMetadataExtractor {
         // MARK: Known metadata sub-dictionaries
         for (rawKey, groupName) in subDictionaryMapping {
             guard let dictionary = properties[rawKey] as? [String: Any], !dictionary.isEmpty else { continue }
-            var builder = GroupBuilder(name: groupName, siblings: dictionary)
-            builder.addAll(dictionary)
-            groups.append(builder.group)
+
+            if groupName == "GPS" {
+                // ImageIO stores GPS keys without the "GPS" prefix
+                // ("Latitude", "AltitudeRef", ...). Re-prefix them so they
+                // match exiftool's names and the annotation database, e.g.
+                // "Latitude" -> "GPSLatitude".
+                var prefixed: [String: Any] = [:]
+                for (key, value) in dictionary {
+                    prefixed[key.hasPrefix("GPS") ? key : "GPS" + key] = value
+                }
+                var builder = GroupBuilder(name: groupName, siblings: prefixed)
+                builder.addAll(prefixed)
+                groups.append(builder.group)
+            } else {
+                var builder = GroupBuilder(name: groupName, siblings: dictionary)
+                builder.addAll(dictionary)
+                groups.append(builder.group)
+            }
         }
 
         return groups

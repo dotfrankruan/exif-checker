@@ -14,8 +14,13 @@ public enum FieldDescriptions {
 
     /// Returns a Chinese explanation for a well-known field, or `nil` when
     /// the field is unknown (in which case the UI shows no annotation).
+    ///
+    /// Lookup is exact first, then case-insensitive, so both `CreationDate`
+    /// (EXIF style) and `Creationdate` (QuickTime style) match.
     public static func note(forKey key: String) -> String? {
-        notes[key]
+        if let exact = notes[key] { return exact }
+        let lowered = key.lowercased()
+        return notes.first { $0.key.lowercased() == lowered }?.value
     }
 
     // MARK: - The annotation database
@@ -86,11 +91,16 @@ public enum FieldDescriptions {
         "Flash": "闪光灯工作状态（位掩码解码）。",
         "FocalLength": "镜头实际焦距，单位：毫米。",
         "FocalLengthIn35mmFilmFormat": "等效 35mm 全画幅焦距，便于比较视角。",
+        "FocalLenIn35mmFilm": "等效 35mm 全画幅焦距，便于比较视角。",
         "SubjectArea": "被摄主体在画面中的区域。",
         "SubjectDistanceRange": "被摄主体的距离范围。",
         "SubSecTime": "秒以下的时间精度（小数秒）。",
         "SubSecTimeOriginal": "拍摄时间的小数秒部分。",
         "SubSecTimeDigitized": "数字化时间的小数秒部分。",
+        "SubsecTimeOriginal": "拍摄时间的小数秒部分。",
+        "SubsecTimeDigitized": "数字化时间的小数秒部分。",
+        "PixelXDimension": "图像宽度（EXIF 记录值），单位：像素。",
+        "PixelYDimension": "图像高度（EXIF 记录值），单位：像素。",
         "ColorSpace": "图像色彩空间。",
         "ExifImageWidth": "图像宽度（EXIF 记录值），单位：像素。",
         "ExifImageHeight": "图像高度（EXIF 记录值），单位：像素。",
@@ -176,6 +186,7 @@ public enum FieldDescriptions {
         "Language": "语言。",
         "Location": "拍摄位置。",
         "Location.ISO6709": "拍摄位置，ISO 6709 标准格式（纬度/经度/海拔）。",
+        "LocationISO6709": "拍摄位置，ISO 6709 标准格式（纬度/经度/海拔）。",
         "CreationDate": "内容创建时间（通常为 UTC）。",
         "ModificationDate": "内容修改时间。",
         "ContentIdentifier": "内容唯一标识符（用于实况照片配对等）。",

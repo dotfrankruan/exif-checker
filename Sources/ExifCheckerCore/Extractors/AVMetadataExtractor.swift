@@ -168,8 +168,9 @@ public enum AVMetadataExtractor {
                 }
             }
         }
-        // estimatedDataRate is async, handled here for audio via a sync
-        // wrapper is not possible; the caller (video path) already loads it.
+        if let dataRate = try? await track.load(.estimatedDataRate), dataRate > 0 {
+            builder.addFormatted("EstimatedDataRate", ValueFormatter.bitRateString(bitsPerSecond: Double(dataRate)))
+        }
     }
 
     // MARK: - Embedded metadata (QuickTime keys, iTunes, ID3, ...)
@@ -200,19 +201,15 @@ public enum AVMetadataExtractor {
     ///
     /// Key normalization:
     ///   - `com.apple.quicktime.make` -> `Make` (prefix stripped)
+    ///   - `com.apple.quicktime.location.accuracy.horizontal`
+    ///     -> `LocationAccuracyHorizontal` (dot/dash segments camel-joined,
+    ///        matching exiftool's tag names)
     ///   - common keys like `creationDate` -> `CreationDate`
     private static func displayPair(for item: AVMetadataItem) async -> (String, Any)? {
         guard var rawKey = item.key as? String ?? item.commonKey?.rawValue, !rawKey.isEmpty else { return nil }
 
-        let quickTimePrefix = "com.apple.quicktime."
-        if rawKey.hasPrefix(quickTimePrefix) {
-            rawKey = String(rawKey.dropFirst(quickTimePrefix.count))
-        }
-        // camelCase container keys -> Title case so they match the
-        // annotation database ("creationDate" -> "CreationDate").
-        if let first = rawKey.first, first.isLowercase {
-            rawKey = first.uppercased() + rawKey.dropFirst()
-        }
+        rawKey = rawKey.replacingOccurrences(of: "com.apple.quicktime.", with: "")
+        rawKey = normalizeKey(rawKey)
 
         // Prefer the string rendering; fall back to the raw value so numbers
         // still flow through ValueFormatter with the normalized key.
@@ -257,8 +254,30 @@ public enum AVMetadataExtractor {
         case .metadata:      return "Metadata"
         case .timecode:      return "Timecode"
         case .depthData:     return "Depth Data"
-        default:             return mediaType.rawValue.capitalized
+        default:
+            // AVMediaType has no case for "auxv" (auxiliary video, e.g. the
+            // HDR gain map track in iPhone videos); label it by raw value.
+            if mediaType.rawValue == "auxv" { return "Auxiliary Video" }
+            return mediaType.rawValue.capitalized
         }
+    }
+
+    /// Normalizes container metadata keys:
+    ///   - dot/dash separated segments are camel-joined
+    ///     (`location.accuracy.horizontal` -> `LocationAccuracyHorizontal`);
+    ///   - leading lowercase is capitalized (`creationDate` -> `CreationDate`).
+    private static func normalizeKey(_ key: String) -> String {
+        guard key.contains(".") || key.contains("-") else {
+            guard let first = key.first, first.isLowercase else { return key }
+            return first.uppercased() + key.dropFirst()
+        }
+        return key
+            .split(whereSeparator: { $0 == "." || $0 == "-" })
+            .map { segment in
+                guard let first = segment.first, first.isLowercase else { return String(segment) }
+                return first.uppercased() + segment.dropFirst()
+            }
+            .joined()
     }
 
     /// Renders a FourCC (`0x68766331`) as a printable string (`hvc1`).
