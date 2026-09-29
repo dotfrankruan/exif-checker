@@ -10,3 +10,6 @@ Package.resolved
 
 # Build artifacts produced by the Makefile
 dist/
+
+# Local sandbox workarounds (module cache, scratch files)
+.tmp/
