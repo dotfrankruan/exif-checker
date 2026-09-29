@@ -1,3 +1,4 @@
+import ExifCheckerCore
 import SwiftUI
 
 /// Root view: shows the drop zone until a file is loaded, then the metadata
@@ -30,6 +31,16 @@ struct ContentView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if model.document != nil {
+                    // Annotation language switcher (annotations are bilingual;
+                    // switching is instant because both variants are stored).
+                    Picker("Annotation Language", selection: $model.noteLanguage) {
+                        Text("EN").tag(NoteLanguage.english)
+                        Text("中").tag(NoteLanguage.chinese)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 96)
+                    .help("Field annotation language / 备注语言")
+
                     Menu {
                         Button("Export JSON…") { model.exportJSON() }
                         Button("Copy All Fields") { model.copyAll() }

@@ -28,6 +28,10 @@ final class AppViewModel: ObservableObject {
     /// True while a drag hovers over the window (drop zone highlighting).
     @Published var isDropTargeted = false
 
+    /// Language of the field annotations. English by default; switchable to
+    /// Chinese at runtime without re-reading the file.
+    @Published var noteLanguage: NoteLanguage = .english
+
     // MARK: Loading
 
     /// Loads (or reloads) a file. Safe to call from any context; extraction
@@ -118,7 +122,10 @@ final class AppViewModel: ObservableObject {
                 item.key.localizedCaseInsensitiveContains(query)
                     || item.name.localizedCaseInsensitiveContains(query)
                     || item.value.localizedCaseInsensitiveContains(query)
-                    || (item.note?.localizedCaseInsensitiveContains(query) ?? false)
+                    || (item.note.map {
+                        $0.en.localizedCaseInsensitiveContains(query)
+                            || $0.zh.localizedCaseInsensitiveContains(query)
+                    } ?? false)
             }
             return matches.isEmpty ? nil : MetadataGroup(name: group.name, items: matches)
         }

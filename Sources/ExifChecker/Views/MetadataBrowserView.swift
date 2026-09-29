@@ -16,7 +16,7 @@ struct MetadataBrowserView: View {
                 ForEach(model.filteredGroups) { group in
                     Section {
                         ForEach(group.items) { item in
-                            MetadataRowView(item: item)
+                            MetadataRowView(item: item, language: model.noteLanguage)
                         }
                     } header: {
                         HStack(spacing: 6) {
@@ -59,10 +59,11 @@ struct MetadataBrowserView: View {
 }
 
 /// One metadata field: display name + raw key on the left, the formatted
-/// value in the middle (selectable), and the Chinese annotation on the right
-/// when the field is well-known.
+/// value in the middle (selectable), and the localized annotation on the
+/// right when the field is well-known.
 struct MetadataRowView: View {
     let item: MetadataItem
+    let language: NoteLanguage
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 16) {
@@ -84,7 +85,7 @@ struct MetadataRowView: View {
 
             // Right: annotation for common fields; intentionally empty for
             // unknown ones (leave it as-is).
-            Text(item.note ?? "")
+            Text(item.note?.text(for: language) ?? "")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(width: 220, alignment: .leading)

@@ -1,6 +1,37 @@
 import Foundation
 import UniformTypeIdentifiers
 
+/// The language used for field annotations in the UI.
+public enum NoteLanguage: String, Sendable, CaseIterable {
+    case english
+    case chinese
+}
+
+/// A bilingual explanation of a well-known metadata field.
+///
+/// Annotations ship in English and Chinese; the UI picks one at display
+/// time, so the language can be switched instantly without re-reading the
+/// file.
+public struct FieldNote: Hashable, Sendable {
+    /// English explanation.
+    public let en: String
+    /// Chinese explanation (中文备注).
+    public let zh: String
+
+    public init(en: String, zh: String) {
+        self.en = en
+        self.zh = zh
+    }
+
+    /// Returns the annotation in the requested language.
+    public func text(for language: NoteLanguage) -> String {
+        switch language {
+        case .english: return en
+        case .chinese: return zh
+        }
+    }
+}
+
 /// A single metadata field extracted from a media file.
 ///
 /// The design mirrors the philosophy of `exiftool -G1 -s`: every item keeps
@@ -19,13 +50,13 @@ public struct MetadataItem: Identifiable, Hashable, Sendable {
     /// Formatted, display-ready value (e.g. `1/920 s` instead of `0.001087`).
     public let value: String
 
-    /// Localized explanation for well-known fields.
+    /// Bilingual explanation for well-known fields.
     ///
     /// Deliberately `nil` for unknown or uncommon fields: those are displayed
     /// "as-is" without any annotation.
-    public let note: String?
+    public let note: FieldNote?
 
-    public init(key: String, name: String? = nil, value: String, note: String? = nil) {
+    public init(key: String, name: String? = nil, value: String, note: FieldNote? = nil) {
         self.id = UUID()
         self.key = key
         self.name = name ?? MetadataItem.humanize(key)

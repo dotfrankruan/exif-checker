@@ -1,7 +1,7 @@
 import XCTest
 @testable import ExifCheckerCore
 
-/// The annotation database: common fields must have Chinese notes, unknown
+/// The annotation database: common fields must have bilingual notes, unknown
 /// fields must return nil (leave as-is), and lookup must tolerate the case
 /// differences between EXIF (`CreationDate`) and QuickTime (`Creationdate`).
 final class FieldDescriptionsTests: XCTestCase {
@@ -23,9 +23,16 @@ final class FieldDescriptionsTests: XCTestCase {
         XCTAssertNil(FieldDescriptions.note(forKey: "ThisKeyDoesNotExistAnywhere"))
     }
 
-    func testNotesAreChinese() {
-        // Spot check that annotations are actually Chinese explanations.
+    func testNotesAreBilingual() {
+        // Every annotation must ship an English and a Chinese variant.
         let note = FieldDescriptions.note(forKey: "Make")
-        XCTAssertEqual(note, "设备制造商。")
+        XCTAssertEqual(note?.en, "Device manufacturer.")
+        XCTAssertEqual(note?.zh, "设备制造商。")
+    }
+
+    func testNoteLanguageSelection() {
+        let note = FieldDescriptions.note(forKey: "GPSLatitude")
+        XCTAssertEqual(note?.text(for: .english), "Latitude where the photo was taken.")
+        XCTAssertEqual(note?.text(for: .chinese), "拍摄地纬度。")
     }
 }
