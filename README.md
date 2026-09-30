@@ -62,7 +62,7 @@ The same binary doubles as a command line tool, mirroring the spirit of
 `exiftool -G1 -s`:
 
 ```sh
-dist/ExifChecker.app/Contents/MacOS/ExifChecker --dump ~/Desktop/sample.heic
+dist/ExifChecker.app/Contents/MacOS/ExifChecker --dump ~/Desktop/photo.heic
 # multiple files at once (reports separated by a blank line):
 .build/release/ExifChecker --dump photo.heic clip.mov
 # or via make (requires your own samples at the paths set in the Makefile):

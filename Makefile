@@ -23,10 +23,13 @@ APP_BUNDLE  := $(DIST_DIR)/$(APP_NAME).app
 RELEASE_BIN := $(BUILD_DIR)/release/$(APP_NAME)
 DEBUG_BIN   := $(BUILD_DIR)/debug/$(APP_NAME)
 
-# Optional convenience fixtures; these paths must exist on the user's Desktop
-# for `make dump-heic` / `make dump-mov` to work. They are NOT bundled.
-HEIC_SAMPLE := $(HOME)/Desktop/sample.heic
-MOV_SAMPLE  := $(HOME)/Desktop/sample.mov
+# Sample files used by the two convenience targets at the bottom of this
+# file. They are NOT bundled: override them to point at your own media, e.g.
+#
+#     make dump-heic SAMPLE_HEIC=~/Pictures/pic.heic
+#
+SAMPLE_HEIC ?= $(HOME)/Desktop/sample.heic
+SAMPLE_MOV  ?= $(HOME)/Desktop/sample.mov
 
 .PHONY: all build build-debug run test bundle open install dump-heic dump-mov clean
 
@@ -55,14 +58,14 @@ open: bundle
 
 # ---- CLI dump convenience ---------------------------------------------------
 
-## Dump the Desktop HEIC sample (exiftool-style text; requires the sample
-## file to exist at $(HEIC_SAMPLE)).
+## Dump a HEIC/HEIF sample (exiftool-style text). Reads $(SAMPLE_HEIC);
+## override it on the command line to point at your own file.
 dump-heic: build
-	$(RELEASE_BIN) --dump "$(HEIC_SAMPLE)"
+	$(RELEASE_BIN) --dump "$(SAMPLE_HEIC)"
 
-## Dump the Desktop MOV sample (requires $(MOV_SAMPLE) to exist).
+## Dump a MOV/MP4 sample. Reads $(SAMPLE_MOV); override as needed.
 dump-mov: build
-	$(RELEASE_BIN) --dump "$(MOV_SAMPLE)"
+	$(RELEASE_BIN) --dump "$(SAMPLE_MOV)"
 
 # ---- Testing ----------------------------------------------------------------
 
