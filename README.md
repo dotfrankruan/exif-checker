@@ -12,9 +12,11 @@ so the app needs neither exiftool nor ffmpeg installed.
 | --- | --- |
 | ![HEIC metadata](docs/screenshot-heic.png) | ![MOV metadata](docs/screenshot-mov.png) |
 
-Both screenshots use the default English annotations; the `EN / 中` toggle in
-the toolbar switches every annotation to Chinese instantly (see
-[Features](#features)).
+Field annotations ship in English and Chinese. The two screenshots above use
+the default English annotations; the `EN / 中` toggle in the toolbar switches
+every annotation instantly, with no re-scan (see [Features](#features)):
+
+![HEIC metadata with Chinese annotations](docs/screenshot-heic-zh.png)
 
 ## Features
 
