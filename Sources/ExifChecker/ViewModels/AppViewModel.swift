@@ -34,17 +34,28 @@ final class AppViewModel: ObservableObject {
 
     // MARK: Loading
 
+    /// Monotonic token identifying the most recent load request. Extraction
+    /// is async, so a slow load can finish *after* a newer one was started;
+    /// stale completions are discarded instead of clobbering newer state.
+    private var loadGeneration = 0
+
     /// Loads (or reloads) a file. Safe to call from any context; extraction
     /// itself runs off the main actor inside the core library.
     func load(_ url: URL) {
+        loadGeneration += 1
+        let generation = loadGeneration
         isLoading = true
         errorMessage = nil
         Task {
             do {
                 let document = try await MetadataLoader.load(from: url)
+                guard generation == self.loadGeneration else { return }
                 self.document = document
-                self.thumbnail = await ThumbnailLoader.thumbnail(for: url, kind: document.kind)
+                let thumbnail = await ThumbnailLoader.thumbnail(for: url, kind: document.kind)
+                guard generation == self.loadGeneration else { return }
+                self.thumbnail = thumbnail
             } catch {
+                guard generation == self.loadGeneration else { return }
                 self.document = nil
                 self.thumbnail = nil
                 self.errorMessage = error.localizedDescription
@@ -91,19 +102,35 @@ final class AppViewModel: ObservableObject {
     }
 
     /// Exports the whole document as pretty-printed JSON via a save panel.
+    /// Serialization and write failures are surfaced through `errorMessage`
+    /// (the shared error alert) instead of being silently swallowed.
     func exportJSON() {
-        guard let document, let data = try? document.jsonReport() else { return }
+        guard let document else { return }
+        let data: Data
+        do {
+            data = try document.jsonReport()
+        } catch {
+            errorMessage = "Could not serialize the metadata as JSON: \(error.localizedDescription)"
+            return
+        }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.json]
         panel.nameFieldStringValue =
             document.fileURL.deletingPathExtension().lastPathComponent + "-metadata.json"
-        if panel.runModal() == .OK, let url = panel.url {
-            try? data.write(to: url, options: .atomic)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try data.write(to: url, options: .atomic)
+        } catch {
+            errorMessage = "Could not write to \(url.path): \(error.localizedDescription)"
         }
     }
 
     /// Closes the current document and returns to the drop zone.
+    /// Also invalidates any in-flight load, so a slow extraction finishing
+    /// afterwards cannot resurrect the closed document.
     func closeDocument() {
+        loadGeneration += 1
+        isLoading = false
         document = nil
         thumbnail = nil
         searchText = ""

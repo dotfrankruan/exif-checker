@@ -9,8 +9,8 @@
 //                      dependencies so it can be unit tested headlessly.
 //
 //   ExifChecker      - The actual macOS application (SwiftUI) plus a small
-//                      command line dump mode (`--dump <file>`), inspired by
-//                      the CLI tools `exiftool` and `ffprobe`.
+//                      command line dump mode (`--dump <file> [<file> ...]`),
+//                      inspired by the CLI tools `exiftool` and `ffprobe`.
 //
 //   ExifCheckerCoreTests - XCTest suite for the core target.
 

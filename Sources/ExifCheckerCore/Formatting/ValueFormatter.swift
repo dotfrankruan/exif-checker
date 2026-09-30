@@ -209,30 +209,43 @@ public enum ValueFormatter {
     }
 
     /// Formats a byte count using the platform's localized byte formatter,
-    /// keeping the exact number of bytes in parentheses.
+    /// keeping the exact number of bytes in parentheses. For tiny files the
+    /// human string already *is* the exact count ("70 bytes"), so the
+    /// parenthesized duplicate is suppressed.
     public static func byteCountString(_ bytes: Int64) -> String {
         let human = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
         let exact = NumberFormatter.localizedString(from: NSNumber(value: bytes), number: .decimal)
-        return "\(human) (\(exact) bytes)"
+        return human == "\(exact) bytes" ? human : "\(human) (\(exact) bytes)"
     }
 
     /// Converts decimal degrees to the classic degrees/minutes/seconds form
     /// used by exiftool: `48° 51' 30.24" N`.
     public static func dmsString(decimalDegrees: Double, ref: String?) -> String {
         let absolute = abs(decimalDegrees)
-        let degrees = Int(absolute)
+        var degrees = Int(absolute)
         let minutesFull = (absolute - Double(degrees)) * 60.0
-        let minutes = Int(minutesFull)
-        let seconds = (minutesFull - Double(minutes)) * 60.0
+        var minutes = Int(minutesFull)
+        var seconds = ((minutesFull - Double(minutes)) * 60.0 * 100).rounded() / 100
+        if seconds >= 60 {
+            seconds = 0
+            minutes += 1
+        }
+        if minutes >= 60 {
+            minutes = 0
+            degrees += 1
+        }
         let hemisphere: String
         if let ref, !ref.isEmpty {
             // ImageIO already provides single letter refs ("N", "S", "E", "W").
             hemisphere = String(ref.prefix(1)).uppercased()
         } else {
-            hemisphere = decimalDegrees >= 0 ? "" : "-"
+            hemisphere = ""
         }
         let base = String(format: "%d° %d' %.2f\"", degrees, minutes, seconds)
-        return hemisphere.isEmpty ? base : "\(base) \(hemisphere)"
+        if hemisphere.isEmpty {
+            return decimalDegrees < 0 ? "-\(base)" : base
+        }
+        return "\(base) \(hemisphere)"
     }
 
     // MARK: - Private helpers

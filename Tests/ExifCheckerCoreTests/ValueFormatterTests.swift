@@ -71,6 +71,17 @@ final class ValueFormatterTests: XCTestCase {
         XCTAssertEqual(formatted, "48° 51' 30.24\" N")
     }
 
+    func testGPSRoundingCarriesToNextMinuteAndDegree() {
+        let nearMinute = 31 + 25.0 / 60 + 59.999 / 3600
+        XCTAssertEqual(ValueFormatter.dmsString(decimalDegrees: nearMinute, ref: "N"),
+                       "31° 26' 0.00\" N")
+        let nearDegree = 31 + 59.0 / 60 + 59.999 / 3600
+        XCTAssertEqual(ValueFormatter.dmsString(decimalDegrees: nearDegree, ref: "N"),
+                       "32° 0' 0.00\" N")
+        XCTAssertEqual(ValueFormatter.dmsString(decimalDegrees: -0.5, ref: nil),
+                       "-0° 30' 0.00\"")
+    }
+
     func testGPSAltitudeWithRef() {
         let siblings: [String: Any] = ["GPSAltitudeRef": 0]
         XCTAssertEqual(

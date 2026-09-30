@@ -19,6 +19,20 @@ final class FieldDescriptionsTests: XCTestCase {
         XCTAssertNotNil(FieldDescriptions.note(forKey: "Creationdate"))
     }
 
+    func testCaseAliasesResolveDeterministically() {
+        // EXIF spells it `SubSecTimeOriginal`, some containers deliver
+        // `SubsecTimeOriginal`; both alias to the same note regardless of
+        // dictionary iteration order.
+        XCTAssertEqual(
+            FieldDescriptions.note(forKey: "SubSecTimeOriginal"),
+            FieldDescriptions.note(forKey: "SubsecTimeOriginal")
+        )
+        XCTAssertEqual(
+            FieldDescriptions.note(forKey: "subsectimedigitized"),
+            FieldDescriptions.note(forKey: "SubSecTimeDigitized")
+        )
+    }
+
     func testUnknownFieldReturnsNil() {
         XCTAssertNil(FieldDescriptions.note(forKey: "ThisKeyDoesNotExistAnywhere"))
     }

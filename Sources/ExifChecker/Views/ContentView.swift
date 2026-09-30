@@ -76,9 +76,9 @@ struct ContentView: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
         }
-        // Extraction errors (e.g. file not found).
+        // Shared error alert (load failures, export failures, ...).
         .alert(
-            "Cannot Open File",
+            "Error",
             isPresented: Binding(
                 get: { model.errorMessage != nil },
                 set: { if !$0 { model.errorMessage = nil } }

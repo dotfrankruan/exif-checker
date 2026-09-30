@@ -177,21 +177,37 @@ public struct MetadataDocument: Sendable {
     }
 
     /// JSON representation used by the Export feature.
+    ///
+    /// Schema:
+    /// ```
+    /// {
+    ///   "file": "<path>", "fileSize": <bytes>, "kind": "image|video|audio|other",
+    ///   "groups": [
+    ///     { "name": "EXIF",
+    ///       "items": [ { "key": "FNumber", "value": "ƒ/1.8" }, ... ] },
+    ///     ...
+    ///   ]
+    /// }
+    /// ```
+    ///
+    /// Groups and items are *arrays*, not dictionaries keyed by name/key:
+    /// real containers can legitimately produce duplicate group names (e.g.
+    /// several QuickTime metadata formats mapping to the same label) and
+    /// duplicate keys within one group (repeated ID3 frames or QuickTime
+    /// keys). Arrays preserve every entry in display order, so the export is
+    /// lossless relative to the on-screen report.
     public func jsonReport() throws -> Data {
-        // Build a plain JSON object: { "file": ..., "groups": { name: {key: value} } }
-        var groupsObject: [String: [String: String]] = [:]
-        for group in groups {
-            var obj: [String: String] = [:]
-            for item in group.items {
-                obj[item.key] = item.value
-            }
-            groupsObject[group.name] = obj
+        let groupsArray: [[String: Any]] = groups.map { group in
+            [
+                "name": group.name,
+                "items": group.items.map { ["key": $0.key, "value": $0.value] }
+            ]
         }
         let root: [String: Any] = [
             "file": fileURL.path,
             "fileSize": fileSize,
             "kind": kind.rawValue,
-            "groups": groupsObject
+            "groups": groupsArray
         ]
         return try JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys])
     }

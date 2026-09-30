@@ -14,9 +14,17 @@ import UniformTypeIdentifiers
 public enum MetadataLoader {
 
     /// Loads and extracts all metadata for the file at `url`.
-    /// - Throws: ``ExtractionError/unreadableFile(_:)`` when the file is missing.
+    /// - Throws: ``ExtractionError/unreadableFile(_:)`` when the URL is
+    ///   missing, is a directory, is not a regular file (e.g. a device or
+    ///   socket), or is not readable by the current user.
     public static func load(from url: URL) async throws -> MetadataDocument {
-        guard FileManager.default.fileExists(atPath: url.path) else {
+        // Robust pre-flight check: a bare `fileExists` accepts directories
+        // and ignores permissions. `isRegularFile` (which follows symlinks)
+        // plus an explicit readability test reject everything the
+        // extractors would only choke on later.
+        let values = try? url.resourceValues(forKeys: [.isRegularFileKey])
+        guard values?.isRegularFile == true,
+              FileManager.default.isReadableFile(atPath: url.path) else {
             throw ExtractionError.unreadableFile(url.path)
         }
 

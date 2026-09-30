@@ -3,8 +3,9 @@ import SwiftUI
 /// Entry point with two modes, mirroring the dual nature of `exiftool` /
 /// `ffprobe` (CLI) and a friendly desktop app (GUI):
 ///
-///     ExifChecker                 -> launches the SwiftUI application
-///     ExifChecker --dump <file>   -> prints metadata exiftool-style, exits
+///     ExifChecker                           -> launches the SwiftUI application
+///     ExifChecker --dump <file> [<file> …]  -> prints metadata exiftool-style, exits
+///     ExifChecker --help                    -> prints CLI usage, exits
 ///
 /// Note: there is intentionally no `@main` attribute anywhere in this
 /// target — `main.swift` takes precedence so we can branch first.

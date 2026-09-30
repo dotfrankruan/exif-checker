@@ -19,9 +19,21 @@ public enum FieldDescriptions {
     /// (EXIF style) and `Creationdate` (QuickTime style) match.
     public static func note(forKey key: String) -> FieldNote? {
         if let exact = notes[key] { return exact }
-        let lowered = key.lowercased()
-        return notes.first { $0.key.lowercased() == lowered }?.value
+        return caseInsensitiveIndex[key.lowercased()]
     }
+
+    /// Precomputed case-insensitive index. Built by iterating the primary
+    /// table in *sorted* key order, so spelling aliases that differ only in
+    /// case (e.g. `SubSecTimeOriginal` / `SubsecTimeOriginal`) resolve
+    /// deterministically — `Dictionary` iteration order is randomized per
+    /// process and must not decide which alias wins.
+    private static let caseInsensitiveIndex: [String: FieldNote] = {
+        var index: [String: FieldNote] = [:]
+        for key in notes.keys.sorted() {
+            index[key.lowercased()] = notes[key]
+        }
+        return index
+    }()
 
     // MARK: - The annotation database
 

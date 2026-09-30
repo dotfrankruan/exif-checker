@@ -55,11 +55,41 @@ final class ExtractionTests: XCTestCase {
 
     func testMissingFileThrows() async {
         let url = URL(fileURLWithPath: "/nonexistent/path/nowhere.jpg")
+        await assertUnreadableFile(url)
+    }
+
+    /// A directory "exists", so a bare existence check would accept it;
+    /// the loader must reject it before any extractor runs.
+    func testDirectoryThrows() async {
+        await assertUnreadableFile(FileManager.default.temporaryDirectory)
+    }
+
+    /// Existence plus regular-file is not enough: permission-less files
+    /// must be rejected as unreadable too.
+    func testUnreadableFileThrows() async throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("exifchecker-test-\(UUID().uuidString).jpg")
+        try Data([0xFF, 0xD8, 0xFF, 0xE0]).write(to: url)
+        try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: url.path)
+        defer {
+            // Restore permissions so the fixture can be cleaned up.
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+            try? FileManager.default.removeItem(at: url)
+        }
+        await assertUnreadableFile(url)
+    }
+
+    /// Asserts that loading `url` throws `ExtractionError.unreadableFile`.
+    private func assertUnreadableFile(_ url: URL) async {
         do {
             _ = try await MetadataLoader.load(from: url)
-            XCTFail("Expected ExtractionError.unreadableFile")
+            XCTFail("Expected ExtractionError.unreadableFile for \(url.path)")
+        } catch let error as ExtractionError {
+            guard case .unreadableFile = error else {
+                return XCTFail("Expected .unreadableFile, got \(error)")
+            }
         } catch {
-            XCTAssertTrue(error is ExtractionError)
+            XCTFail("Expected ExtractionError, got \(error)")
         }
     }
 

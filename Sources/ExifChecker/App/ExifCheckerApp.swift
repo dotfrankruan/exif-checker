@@ -20,7 +20,10 @@ struct ExifCheckerApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("ExifChecker", id: MainWindowController.windowID) {
+        // A single `Window` (not a `WindowGroup`): a metadata inspector only
+        // ever needs one window, and this prevents duplicate windows when a
+        // file is opened from Finder while the app is already running.
+        Window("ExifChecker", id: MainWindowController.windowID) {
             ContentView(model: model)
         }
         .defaultSize(width: 980, height: 680)

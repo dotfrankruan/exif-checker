@@ -11,9 +11,9 @@
 #   make clean                          Remove all build artifacts
 #
 # CLI mode (exiftool-style dump to stdout):
-#   .build/release/ExifChecker --dump <file>
-#   make dump-heic                      Dump the bundled Desktop test image
-#   make dump-mov                       Dump the bundled Desktop test video
+#   .build/release/ExifChecker --dump <file> [<file> ...]
+#   make dump-heic                      Dump the user's Desktop HEIC sample
+#   make dump-mov                       Dump the user's Desktop MOV sample
 # ============================================================================
 
 APP_NAME    := ExifChecker
@@ -23,7 +23,8 @@ APP_BUNDLE  := $(DIST_DIR)/$(APP_NAME).app
 RELEASE_BIN := $(BUILD_DIR)/release/$(APP_NAME)
 DEBUG_BIN   := $(BUILD_DIR)/debug/$(APP_NAME)
 
-# Test fixtures referenced by the user request.
+# Optional convenience fixtures; these paths must exist on the user's Desktop
+# for `make dump-heic` / `make dump-mov` to work. They are NOT bundled.
 HEIC_SAMPLE := $(HOME)/Desktop/sample.heic
 MOV_SAMPLE  := $(HOME)/Desktop/sample.mov
 
@@ -54,11 +55,12 @@ open: bundle
 
 # ---- CLI dump convenience ---------------------------------------------------
 
-## Dump the Desktop HEIC sample (exiftool-style text).
+## Dump the Desktop HEIC sample (exiftool-style text; requires the sample
+## file to exist at $(HEIC_SAMPLE)).
 dump-heic: build
 	$(RELEASE_BIN) --dump "$(HEIC_SAMPLE)"
 
-## Dump the Desktop MOV sample (exiftool-style text).
+## Dump the Desktop MOV sample (requires $(MOV_SAMPLE) to exist).
 dump-mov: build
 	$(RELEASE_BIN) --dump "$(MOV_SAMPLE)"
 
@@ -72,15 +74,17 @@ test:
 
 ## Create dist/ExifChecker.app around the release binary. The bundle carries
 ## a minimal Info.plist; no asset catalog is required because the UI uses SF
-## Symbols exclusively. The binary is ad-hoc codesigned so Gatekeeper and
-## LaunchServices treat it as a normal local app.
+## Symbols exclusively. The bundle is ad-hoc codesigned, which is sufficient
+## for running on the local machine; distribution to other Macs would need a
+## Developer ID signature plus notarization.
 bundle: build
 	@echo "Packaging $(APP_BUNDLE)"
 	@rm -rf "$(APP_BUNDLE)"
 	@mkdir -p "$(APP_BUNDLE)/Contents/MacOS"
 	@cp "$(RELEASE_BIN)" "$(APP_BUNDLE)/Contents/MacOS/$(APP_NAME)"
 	@cp "Resources/Info.plist" "$(APP_BUNDLE)/Contents/Info.plist"
-	@codesign --force --deep --sign - "$(APP_BUNDLE)" 2>/dev/null || true
+	@codesign --force --deep --sign - "$(APP_BUNDLE)"
+	@codesign --verify --deep --strict "$(APP_BUNDLE)"
 	@echo "Done. Open with: open \"$(APP_BUNDLE)\""
 
 ## Install the bundled app into /Applications.
