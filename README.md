@@ -8,9 +8,13 @@ audio), inspired by the CLI tools [`exiftool`](https://exiftool.org) and
 No external dependencies: everything is read through Apple's own frameworks,
 so the app needs neither exiftool nor ffmpeg installed.
 
-| Image (HEIC) with Chinese annotations | Video (MOV) with English annotations |
+| Image metadata (HEIC) | Video metadata (MOV) |
 | --- | --- |
 | ![HEIC metadata](docs/screenshot-heic.png) | ![MOV metadata](docs/screenshot-mov.png) |
+
+Both screenshots use the default English annotations; the `EN / 中` toggle in
+the toolbar switches every annotation to Chinese instantly (see
+[Features](#features)).
 
 ## Features
 
